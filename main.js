@@ -23,10 +23,11 @@ const createScene = () => {
     // LIGHT
     // =========================================
 
-    createSunLight(scene, {
-        forceHour: 12
-    });
+    // createSunLight(scene, {
+    //     forceHour: 12
+    // });
 
+     createSunLight(scene);
 
     // =========================================
     // TERRAIN
