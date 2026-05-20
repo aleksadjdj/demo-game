@@ -61,14 +61,6 @@ const createScene = async () => {
         shadowGenerator.addShadowCaster(playerController.mesh, true);
         playerController.mesh.receiveShadows = true;
 
-       //setupTightShadowCamera(
-       //    scene,
-       //    sunLight,
-       //    shadowGenerator,
-       //    playerController.mesh
-       //);
-
-
         console.log("12 player complete");
 
         console.log("13 cubes start");
