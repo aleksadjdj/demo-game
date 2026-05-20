@@ -1,8 +1,28 @@
 import { natureModels } from "./modelsManifest.js";
 
+function getTerrainY(ground, position, yOffset = 0) {
+
+    let y = position.y;
+
+    if (
+        ground &&
+        typeof ground.getHeightAtCoordinates === "function"
+    ) {
+        y = ground.getHeightAtCoordinates(
+            position.x,
+            position.z
+        );
+    }
+
+    return y + yOffset;
+}
+
 async function loadSingleNatureModel(scene, ground, modelConfig, position) {
 
     try {
+
+        console.log("Loading model:", modelConfig.name);
+
         const result = await BABYLON.SceneLoader.ImportMeshAsync(
             "",
             modelConfig.rootUrl,
@@ -17,15 +37,15 @@ async function loadSingleNatureModel(scene, ground, modelConfig, position) {
             return null;
         }
 
-        let y = position.y;
-
-        if (ground && typeof ground.getHeightAtCoordinates === "function") {
-            y = ground.getHeightAtCoordinates(position.x, position.z);
-        }
+        const y = getTerrainY(
+            ground,
+            position,
+            modelConfig.yOffset || 0
+        );
 
         root.position = new BABYLON.Vector3(
             position.x,
-            y + (modelConfig.yOffset || 0),
+            y,
             position.z
         );
 
@@ -42,20 +62,21 @@ async function loadSingleNatureModel(scene, ground, modelConfig, position) {
         result.meshes.forEach((mesh) => {
             mesh.isPickable = true;
             mesh.checkCollisions = modelConfig.collisions || false;
-
-            // turn on only while debugging
-            mesh.showBoundingBox = true;
+            mesh.showBoundingBox = modelConfig.showBoundingBox || false;
+            mesh.setEnabled(true);
         });
 
-        console.log("Loaded model:", modelConfig.name, {
+        console.log("Loaded and placed model:", modelConfig.name, {
             file: modelConfig.fileName,
             position: root.position,
-            scale: root.scaling
+            scale: root.scaling,
+            meshCount: result.meshes.length
         });
 
         return root;
 
     } catch (error) {
+
         console.error("Failed to load model:", modelConfig.name, error);
         return null;
     }
@@ -88,79 +109,54 @@ export async function loadAllNatureModels(scene, ground) {
         }
     }
 
+    console.log("All nature models loaded:", loadedModels.length);
+
     return loadedModels;
 }
 
 export async function loadCommonTreeOnly(scene, ground) {
 
-    try {
-        const result = await BABYLON.SceneLoader.ImportMeshAsync(
-            "",
-            "./assets/nature_models/",
-            "CommonTree_1.gltf",
-            scene
-        );
+    const modelConfig = {
+        name: "CommonTree_1",
+        rootUrl: "./assets/nature_models/",
+        fileName: "CommonTree_1.gltf",
+        scale: 10,
+        yOffset: 1,
+        rotationY: 0,
+        collisions: false,
+        showBoundingBox: false
+    };
 
-        // console.log("CommonTree_1 raw result:", result);
+    const root = await loadSingleNatureModel(
+        scene,
+        ground,
+        modelConfig,
+        new BABYLON.Vector3(10, 0, 10)
+    );
 
-        const root = result.meshes[0];
-
-        if (!root) {
-            console.error("CommonTree_1 has no meshes.");
-            return null;
-        }
-
-        const x = 10;
-        const z = 10;
-
-        let y = 5;
-
-        if (ground && typeof ground.getHeightAtCoordinates === "function") {
-            y = ground.getHeightAtCoordinates(x, z) + 1;
-        }
-
-        root.position = new BABYLON.Vector3(x, y, z);
-
-        root.scaling = new BABYLON.Vector3(
-            10,
-            10,
-            10
-        );
-
-        result.meshes.forEach((mesh) => {
-            mesh.isPickable = true;
-            mesh.checkCollisions = false;
-            mesh.showBoundingBox = false;
-        });
-
-        // console.log("CommonTree_1 placed at:", root.position);
-        // console.log("CommonTree_1 scale:", root.scaling);
-
-        // visible debug marker next to tree
-        const marker = BABYLON.MeshBuilder.CreateBox(
-            "tree_debug_marker",
-            { size: 2 },
-            scene
-        );
-
-        marker.position = new BABYLON.Vector3(
-            x + 3,
-            y + 1,
-            z
-        );
-
-        const markerMat = new BABYLON.StandardMaterial(
-            "treeDebugMarkerMat",
-            scene
-        );
-
-        markerMat.diffuseColor = new BABYLON.Color3(1, 0, 0);
-        marker.material = markerMat;
-
-        return root;
-
-    } catch (error) {
-        console.error("CommonTree_1 load failed:", error);
+    if (!root) {
         return null;
     }
+
+    const marker = BABYLON.MeshBuilder.CreateBox(
+        "tree_debug_marker",
+        { size: 2 },
+        scene
+    );
+
+    marker.position = new BABYLON.Vector3(
+        root.position.x + 3,
+        root.position.y + 1,
+        root.position.z
+    );
+
+    const markerMat = new BABYLON.StandardMaterial(
+        "treeDebugMarkerMat",
+        scene
+    );
+
+    markerMat.diffuseColor = new BABYLON.Color3(1, 0, 0);
+    marker.material = markerMat;
+
+    return root;
 }

@@ -126,7 +126,6 @@ export function createDebugHoverGlow(scene) {
 }
 
 
-
 export function createDebugHoverBrightness(scene) {
 
     let currentMesh = null;
@@ -179,7 +178,7 @@ export function createDebugHoverBrightness(scene) {
 
         resetCurrentMesh();
 
-        if (!hoveredMesh) {
+        if (!hoveredMesh || !hoveredMesh.material) {
             return;
         }
 
@@ -190,22 +189,54 @@ export function createDebugHoverBrightness(scene) {
         currentMesh.metadata.debugOriginalMaterial =
             currentMesh.material;
 
+        const originalMaterial = currentMesh.material;
+
         const hoverMaterial =
-            currentMesh.material.clone(
+            originalMaterial.clone(
                 `${currentMesh.name}_hover_mat`
             );
 
-        const originalDiffuse =
-            currentMesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
-        
-            hoverMaterial.diffuseColor =
-            brightenColor(originalDiffuse, 0.1);
+        // =====================================
+        // 40% BRIGHTNESS BOOST
+        // =====================================
 
-        hoverMaterial.emissiveColor =
-            brightenColor(originalDiffuse, 0.1).scale(0.08);
+        const brightnessAmount = 0.4;
+
+        if (originalMaterial.diffuseTexture) {
+
+            hoverMaterial.diffuseTexture =
+                originalMaterial.diffuseTexture;
+
+            hoverMaterial.emissiveTexture =
+                originalMaterial.diffuseTexture;
+
+            hoverMaterial.emissiveColor =
+                new BABYLON.Color3(
+                    brightnessAmount,
+                    brightnessAmount,
+                    brightnessAmount
+                );
+
+        } else {
+
+            const originalDiffuse =
+                originalMaterial.diffuseColor ||
+                new BABYLON.Color3(1, 1, 1);
+
+            hoverMaterial.diffuseColor =
+                brightenColor(
+                    originalDiffuse,
+                    brightnessAmount
+                );
+
+            hoverMaterial.emissiveColor =
+                originalDiffuse.scale(brightnessAmount);
+        }
+
+        hoverMaterial.specularColor =
+            new BABYLON.Color3(0, 0, 0);
 
         currentMesh.material = hoverMaterial;
-
     });
 
     return {
@@ -215,8 +246,8 @@ export function createDebugHoverBrightness(scene) {
     };
 }
 
+function brightenColor(color, amount = 0.4) {
 
-function brightenColor(color, amount = 0.2) {
     return new BABYLON.Color3(
         color.r + (1 - color.r) * amount,
         color.g + (1 - color.g) * amount,

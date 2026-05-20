@@ -3,8 +3,8 @@ const CUBE_TEXTURES = [
     "./assets/textures/dirty_1.png",
     "./assets/textures/grass_1.png",
     "./assets/textures/sand_1.png",
+    "./assets/textures/aca.jpg",
 ];
-
 
 export function createCube(scene) {
 
@@ -13,6 +13,7 @@ export function createCube(scene) {
     let cubeIndex = 0;
 
     const textureMaterials = new Map();
+    const hoverMaterials = new Map();
 
     const whiteMat = new BABYLON.StandardMaterial(
         "whiteMat",
@@ -30,6 +31,34 @@ export function createCube(scene) {
     blackMat.diffuseColor =
         new BABYLON.Color3(0, 0, 0);
 
+    function getHoverMaterial(baseMaterial) {
+
+        if (hoverMaterials.has(baseMaterial.name)) {
+            return hoverMaterials.get(baseMaterial.name);
+        }
+
+        const hoverMat = baseMaterial.clone(
+            `${baseMaterial.name}_hover`
+        );
+
+        // keep original texture
+        hoverMat.diffuseTexture = baseMaterial.diffuseTexture || null;
+
+        // brighten using the same texture, not flat gray
+        if (baseMaterial.diffuseTexture) {
+            hoverMat.emissiveTexture = baseMaterial.diffuseTexture;
+            hoverMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        } else {
+            hoverMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        }
+
+        hoverMat.specularColor = new BABYLON.Color3(0, 0, 0);
+
+        hoverMaterials.set(baseMaterial.name, hoverMat);
+
+        return hoverMat;
+    }
+
     function getRandomTextureMaterial() {
 
         if (!CUBE_TEXTURES.length) {
@@ -46,7 +75,7 @@ export function createCube(scene) {
         }
 
         const mat = new BABYLON.StandardMaterial(
-            `mat_${cubeIndex}`,
+            `mat_${texturePath}`,
             scene
         );
 
@@ -60,6 +89,8 @@ export function createCube(scene) {
 
         return mat;
     }
+
+   
 
     function createSingleCube(position) {
 
@@ -77,13 +108,16 @@ export function createCube(scene) {
 
         const randomTextureMat = getRandomTextureMaterial();
 
-        cube.material =
+        const baseMaterial =
             randomTextureMat ||
             (
                 cubeIndex % 2 === 0
                     ? whiteMat
                     : blackMat
             );
+
+        cube.material = baseMaterial;
+
 
         cubeIndex++;
 
