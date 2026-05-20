@@ -42,7 +42,7 @@ export function createCubeLine(scene) {
             cube.position.y = wallGroundY + j + 0.5;
 
             // keep Z in same line
-            cube.position.z = 0;
+            cube.position.z = -5;
 
             // every 10th vertical cube column is red
             if (i % 10 === 0) {

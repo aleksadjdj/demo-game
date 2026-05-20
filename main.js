@@ -9,6 +9,7 @@ import { createTerrain } from "./terrain.js";
 import { loadCommonTreeOnly, loadAllNatureModels   } from "./modelLoader.js";
 import { PlayerController } from "./player.js";
 import { createSunLight } from "./sunLight.js";
+import { KeyHoldTimerDebug } from "./ui/keyHoldTimerDebug.js";
 
 const canvas = document.getElementById("renderCanvas");
 
@@ -79,6 +80,7 @@ const createScene = () => {
     // createDebugMouseLaser(scene, camera);
     createDebugHoverGlow(scene);
     createDebugHoverBrightness(scene);
+    const wTimerDebug = new KeyHoldTimerDebug(scene);
 
     // =========================================wa
     // COLLISIONS

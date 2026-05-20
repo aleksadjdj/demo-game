@@ -5,11 +5,11 @@ export class PlayerController {
         this.scene = scene;
         this.camera = null;
 
-        this.speed = options.speed || 0.30;
-        this.turnSpeed = options.turnSpeed || 0.07;
+        this.speed = options.speed ?? 8.33;  // meters per second
+        this.turnSpeed = options.turnSpeed || 2.5; // radians per second
 
-        this.gravity = options.gravity ?? -0.015;
-        this.jumpPower = options.jumpPower ?? 0.17;
+        this.gravity = options.gravity ?? -20;     // meters per second²
+        this.jumpPower = options.jumpPower ?? 6.3; // around 1m jump
 
         this.playerHeight = options.playerHeight ?? 1.8;
         this.playerRadius = options.playerRadius ?? 0.29;
@@ -199,12 +199,15 @@ export class PlayerController {
 
         this.scene.onBeforeRenderObservable.add(() => {
 
+            const deltaTime =
+                Math.min(this.scene.getEngine().getDeltaTime() / 1000, 0.05);
+
             if (this.inputMap["a"]) {
-                this.mesh.rotation.y -= this.turnSpeed;
+                this.mesh.rotation.y -= this.turnSpeed * deltaTime;
             }
 
             if (this.inputMap["d"]) {
-                this.mesh.rotation.y += this.turnSpeed;
+                this.mesh.rotation.y += this.turnSpeed * deltaTime;
             }
 
             let moveDirection = 0;
@@ -214,7 +217,7 @@ export class PlayerController {
             }
 
             if (this.inputMap["s"]) {
-                moveDirection -= 0.5;
+                moveDirection -= 1;
             }
 
             const forward = new BABYLON.Vector3(
@@ -223,12 +226,12 @@ export class PlayerController {
                 Math.cos(this.mesh.rotation.y)
             );
 
-            this.velocityY += this.gravity;
+            this.velocityY += this.gravity * deltaTime;
 
             const moveVector = new BABYLON.Vector3(
-                forward.x * moveDirection * this.speed,
-                this.velocityY,
-                forward.z * moveDirection * this.speed
+                forward.x * moveDirection * this.speed * deltaTime,
+                this.velocityY * deltaTime,
+                forward.z * moveDirection * this.speed * deltaTime
             );
 
             this.mesh.moveWithCollisions(moveVector);
@@ -280,8 +283,8 @@ export class PlayerController {
             this.scene
         );
 
-        arrowMat.diffuseColor = new BABYLON.Color3(1, 0, 0);
-        arrowMat.emissiveColor = new BABYLON.Color3(1, 0, 0);
+        arrowMat.diffuseColor = new BABYLON.Color3(1, 0, 1);
+        arrowMat.emissiveColor = new BABYLON.Color3(1, 0, 1);
 
         const shaft = BABYLON.MeshBuilder.CreateCylinder(
             "player_arrow_shaft",
