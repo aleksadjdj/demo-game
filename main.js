@@ -58,7 +58,7 @@ const createScene = () => {
     const camera = createWowCamera(scene, canvas, playerController.mesh);
 
     playerController.setCamera(camera);
-    
+
     createDebugSceneStats(scene, camera, {
         axisSize: 8,
         axisPosition: new BABYLON.Vector3(0, 3, 0),
@@ -69,7 +69,7 @@ const createScene = () => {
     // =========================================
     // DEBUG MOUSE UI
     // =========================================
-    createDebugUI(engine, scene);
+    // createDebugUI(engine, scene);
 
 
 
@@ -83,8 +83,8 @@ const createScene = () => {
     // =========================================wa
     // COLLISIONS
     // =========================================
-    scene.collisionsEnabled = true;
-    camera.checkCollisions = true;
+    scene.collisionsEnabled = false;
+    camera.checkCollisions = false;
     
     return scene;
 };
