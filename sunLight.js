@@ -22,7 +22,7 @@ export function createSunLight(scene, options = {}) {
     // SHADOW GENERATOR
     // =====================================
     const shadowGenerator = new BABYLON.ShadowGenerator(
-        config.shadowMapSize || 10,
+        config.shadowMapSize || 512,
         sunLight
     );
 
