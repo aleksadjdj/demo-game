@@ -92,11 +92,6 @@ const createScene = () => {
 };
 
 
-
-
 const scene = createScene();
-
-
-
 engine.runRenderLoop(() => { scene.render(); });
 window.addEventListener("resize", () => { engine.resize(); });

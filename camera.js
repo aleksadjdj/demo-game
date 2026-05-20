@@ -24,13 +24,13 @@ export function createWowCamera(scene, canvas, target) {
     // VIEW DISTANCE LIMIT
     // =====================================
     camera.minZ = 0.1;
-    camera.maxZ = 100;
+    camera.maxZ = 200;
 
     // =====================================
     // CAMERA ANGLE LIMIT
     // =====================================
-    camera.lowerBetaLimit = 0.35;
-    camera.upperBetaLimit = 1.35;
+    camera.lowerBetaLimit = 0.25;
+    camera.upperBetaLimit = 1.50;
 
     // =====================================
     // CAMERA COLLISION
