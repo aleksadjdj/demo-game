@@ -13,7 +13,7 @@ export function createCube(scene) {
     let cubeIndex = 0;
 
     const textureMaterials = new Map();
-    const hoverMaterials = new Map();
+    const rotatingCubes = [];
 
     const whiteMat = new BABYLON.StandardMaterial(
         "whiteMat",
@@ -30,34 +30,6 @@ export function createCube(scene) {
 
     blackMat.diffuseColor =
         new BABYLON.Color3(0, 0, 0);
-
-    function getHoverMaterial(baseMaterial) {
-
-        if (hoverMaterials.has(baseMaterial.name)) {
-            return hoverMaterials.get(baseMaterial.name);
-        }
-
-        const hoverMat = baseMaterial.clone(
-            `${baseMaterial.name}_hover`
-        );
-
-        // keep original texture
-        hoverMat.diffuseTexture = baseMaterial.diffuseTexture || null;
-
-        // brighten using the same texture, not flat gray
-        if (baseMaterial.diffuseTexture) {
-            hoverMat.emissiveTexture = baseMaterial.diffuseTexture;
-            hoverMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        } else {
-            hoverMat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        }
-
-        hoverMat.specularColor = new BABYLON.Color3(0, 0, 0);
-
-        hoverMaterials.set(baseMaterial.name, hoverMat);
-
-        return hoverMat;
-    }
 
     function getRandomTextureMaterial() {
 
@@ -90,7 +62,27 @@ export function createCube(scene) {
         return mat;
     }
 
-   
+    function getRandomRotationSpeed() {
+
+        const minSpeed = 0.05;
+        const maxSpeed = 0.25;
+
+        function randomAxisSpeed() {
+
+            const speed =
+                minSpeed + Math.random() * (maxSpeed - minSpeed);
+
+            return Math.random() > 0.5
+                ? speed
+                : -speed;
+        }
+
+        return new BABYLON.Vector3(
+            randomAxisSpeed(),
+            randomAxisSpeed(),
+            randomAxisSpeed()
+        );
+    }
 
     function createSingleCube(position) {
 
@@ -106,6 +98,13 @@ export function createCube(scene) {
         cube.position.y = position.y + cubeSize / 2;
         cube.position.z = position.z;
 
+        cube.rotation.x = Math.random() * Math.PI * 2;
+        cube.rotation.y = Math.random() * Math.PI * 2;
+        cube.rotation.z = Math.random() * Math.PI * 2;
+
+        cube.metadata = cube.metadata || {};
+        cube.metadata.rotationSpeed = getRandomRotationSpeed();
+
         const randomTextureMat = getRandomTextureMaterial();
 
         const baseMaterial =
@@ -118,11 +117,36 @@ export function createCube(scene) {
 
         cube.material = baseMaterial;
 
+        rotatingCubes.push(cube);
 
         cubeIndex++;
 
         return cube;
     }
+
+    scene.onBeforeRenderObservable.add(() => {
+
+        const deltaTime =
+            scene.getEngine().getDeltaTime() / 1000;
+
+        rotatingCubes.forEach((cube) => {
+
+            if (!cube || cube.isDisposed()) {
+                return;
+            }
+
+            const rotationSpeed =
+                cube.metadata?.rotationSpeed;
+
+            if (!rotationSpeed) {
+                return;
+            }
+
+            cube.rotation.x += rotationSpeed.x * deltaTime;
+            cube.rotation.y += rotationSpeed.y * deltaTime;
+            cube.rotation.z += rotationSpeed.z * deltaTime;
+        });
+    });
 
     scene.onPointerObservable.add((pointerInfo) => {
 
