@@ -8,8 +8,9 @@ import { createCube } from "./cube2.js";
 import { createTerrain } from "./terrain.js";
 import { loadCommonTreeOnly, loadAllNatureModels   } from "./modelLoader.js";
 import { PlayerController } from "./player.js";
-import { createSunLight } from "./sunLight.js";
+import { createSunLight, addSceneShadowCasters } from "./sunLight.js";
 import { KeyHoldTimerDebug } from "./ui/keyHoldTimerDebug.js";
+import { createGiantSkyCube } from "./cube3.js";
 
 const canvas = document.getElementById("renderCanvas");
 
@@ -32,15 +33,16 @@ const createScene = async () => {
         console.log("03 preload complete", assets);
 
         console.log("04 light start");
-        createSunLight(scene);
+        const { sunLight, shadowGenerator } = createSunLight(scene, {forceHour: 17});
         console.log("05 light complete");
 
         console.log("06 terrain start");
         const ground = createTerrain(scene);
+        ground.receiveShadows = true;          // ground receives shadows
         console.log("07 terrain complete", ground);
 
         console.log("08 models start");
-        await loadAllNatureModels(scene, ground, assets);
+        // await loadAllNatureModels(scene, ground, assets);
         console.log("09 all nature models complete");
 
         await loadCommonTreeOnly(scene, ground, assets);
@@ -54,12 +56,28 @@ const createScene = async () => {
             gravity: -20,
             jumpPower: 6.3
         });
+        // replace the single addShadowCaster line with this
+        // IMPORTANT: add the player mesh itself
+        shadowGenerator.addShadowCaster(playerController.mesh, true);
+        playerController.mesh.receiveShadows = true;
+
+       //setupTightShadowCamera(
+       //    scene,
+       //    sunLight,
+       //    shadowGenerator,
+       //    playerController.mesh
+       //);
+
+
         console.log("12 player complete");
 
         console.log("13 cubes start");
         createCubeLine(scene);
         createCube(scene);
         console.log("14 cubes complete");
+
+        // add all existing scene meshes as shadow casters
+        addSceneShadowCasters(scene, shadowGenerator, ground);
 
         console.log("15 camera start");
         const camera = createWowCamera(
@@ -109,23 +127,22 @@ const createScene = async () => {
 
         document.body.classList.remove("loading");
     }
+
 };
 
 
+
 createScene()
-    .then((scene) => {
-
-        console.log("19 render loop start");
-
-        engine.runRenderLoop(() => {
-            scene.render();
-        });
-
-        window.addEventListener("resize", () => {
-            engine.resize();
-        });
-    })
-    .catch((error) => {
-        console.error("FATAL MAIN ERROR:", error);
-        engine.hideLoadingUI();
+.then((scene) => {
+    console.log("19 render loop start");
+    engine.runRenderLoop(() => {
+        scene.render();
     });
+    window.addEventListener("resize", () => {
+        engine.resize();
+    });
+})
+.catch((error) => {
+    console.error("FATAL MAIN ERROR:", error);
+    engine.hideLoadingUI();
+});

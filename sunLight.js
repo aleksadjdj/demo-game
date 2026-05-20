@@ -2,7 +2,8 @@ export function createSunLight(scene, options = {}) {
 
     const config = {
         updateEveryMs: options.updateEveryMs || 60000,
-        forceHour: options.forceHour ?? null
+        forceHour: options.forceHour ?? null,
+        shadowMapSize: options.shadowMapSize || 4096,  // ← this line was missing
     };
 
     // =====================================
@@ -16,6 +17,29 @@ export function createSunLight(scene, options = {}) {
     );
 
     sunLight.position = new BABYLON.Vector3(80, 120, 80);
+
+    // =====================================
+    // SHADOW GENERATOR
+    // =====================================
+    const shadowGenerator = new BABYLON.ShadowGenerator(
+        config.shadowMapSize || 10,
+        sunLight
+    );
+
+    // SIMPLE / FAST SHADOWS
+    shadowGenerator.useBlurExponentialShadowMap = false;
+    shadowGenerator.useExponentialShadowMap = false;
+    shadowGenerator.usePoissonSampling = false;
+    shadowGenerator.usePercentageCloserFiltering = false;
+    shadowGenerator.useBlurVarianceShadowMap = false;
+    shadowGenerator.useVarianceShadowMap = false;
+
+    // Hard simple shadow
+    shadowGenerator.bias = 0.002;
+    shadowGenerator.normalBias = 0.02;
+
+    // Shadow strength
+    shadowGenerator.darkness = 0.35;
 
     // =====================================
     // AMBIENT LIGHT
@@ -43,6 +67,9 @@ export function createSunLight(scene, options = {}) {
     sunSphere.isPickable = false;
     sunSphere.checkCollisions = false;
 
+    // Sun sphere should NOT cast a shadow of itself
+    sunSphere.receiveShadows = false;
+
     const sunMat = new BABYLON.StandardMaterial(
         "debugSunMat",
         scene
@@ -52,6 +79,11 @@ export function createSunLight(scene, options = {}) {
     sunMat.diffuseColor = new BABYLON.Color3(1, 0.85, 0.35);
 
     sunSphere.material = sunMat;
+
+
+    // =====================================
+    // UPDATE
+    // =====================================
 
     function updateLight() {
 
@@ -87,6 +119,10 @@ export function createSunLight(scene, options = {}) {
         scene.fogStart = sunData.fogStart;
         scene.fogEnd = sunData.fogEnd;
         scene.fogColor = sunData.fogColor;
+
+
+        // Fade shadow darkness: sharp at noon, gone at night
+        shadowGenerator.darkness = sunData.showSun ? 0.35 : 1.0;
     }
 
     updateLight();
@@ -94,15 +130,11 @@ export function createSunLight(scene, options = {}) {
     let lastUpdate = 0;
 
     scene.onBeforeRenderObservable.add(() => {
-
         const now = performance.now();
-
         if (now - lastUpdate < config.updateEveryMs) {
             return;
         }
-
         lastUpdate = now;
-
         updateLight();
     });
 
@@ -110,9 +142,30 @@ export function createSunLight(scene, options = {}) {
         sunLight,
         ambientLight,
         sunSphere,
-        updateLight
+        shadowGenerator,   // ← exported so other files can register casters
+        updateLight,
     };
 }
+
+
+ export function addSceneShadowCasters(scene, shadowGenerator, ground) {
+     scene.meshes.forEach((mesh) => {
+         if (!mesh) return;
+         if (mesh === ground) return;
+         if (mesh.name === "terrain") return;
+         if (mesh.name === "debug_sun_sphere") return;
+         // Skip invisible/root/helper meshes without real geometry
+         if (typeof mesh.getTotalVertices === "function" && mesh.getTotalVertices() === 0) {
+             return;
+         }
+         shadowGenerator.addShadowCaster(mesh, true);
+     });
+    // console.log("Shadow casters:",   shadowGenerator.getShadowMap().renderList.length   );
+    // console.log("Ground receive shadows:", ground.receiveShadows);
+    // console.log("Shadow render list:", shadowGenerator.getShadowMap().renderList);
+    // console.log("Sun direction:", shadowGenerator.getLight().direction);
+    // console.log("Sun intensity:", shadowGenerator.getLight().intensity);
+ }
 
 
 

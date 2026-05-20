@@ -29,8 +29,8 @@ export function createWowCamera(scene, canvas, target) {
     // =====================================
     // CAMERA ANGLE LIMIT
     // =====================================
-    camera.lowerBetaLimit = 0.25;
-    camera.upperBetaLimit = 1.50;
+    camera.lowerBetaLimit = 0.25;  // 0.25;
+    camera.upperBetaLimit = 1.50;  // 1.50;
 
     // =====================================
     // CAMERA COLLISION
