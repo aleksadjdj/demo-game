@@ -217,7 +217,7 @@ export class PlayerController {
             }
 
             if (this.inputMap["s"]) {
-                moveDirection -= 1;
+                moveDirection -= 0.5;
             }
 
             const forward = new BABYLON.Vector3(
