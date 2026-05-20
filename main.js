@@ -4,6 +4,7 @@ import { createDebugMouseLaser, createDebugHoverGlow, createDebugHoverBrightness
 import { createDebugSceneStats } from "./ui/debugSceneStats.js";
 import { createWowCamera } from "./camera.js";
 import { createCubeLine } from "./cube.js";
+import { createCube } from "./cube2.js";
 import { createTerrain } from "./terrain.js";
 import { loadCommonTreeOnly, loadAllNatureModels   } from "./modelLoader.js";
 import { PlayerController } from "./player.js";
@@ -27,7 +28,7 @@ const createScene = () => {
     //     forceHour: 12
     // });
 
-     createSunLight(scene);
+    createSunLight(scene);
 
     // =========================================
     // TERRAIN
@@ -49,12 +50,12 @@ const createScene = () => {
     // CUBES
     // =========================================
     createCubeLine(scene);
+    createCube(scene);
 
     // =========================================
     // CAMERA
     // =========================================
     const camera = createWowCamera(scene, canvas, playerController.mesh);
-
 
     playerController.setCamera(camera);
     

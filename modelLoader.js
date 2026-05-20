@@ -122,9 +122,9 @@ export async function loadCommonTreeOnly(scene, ground) {
         root.position = new BABYLON.Vector3(x, y, z);
 
         root.scaling = new BABYLON.Vector3(
-            1,
-            1,
-            1
+            10,
+            10,
+            10
         );
 
         result.meshes.forEach((mesh) => {
