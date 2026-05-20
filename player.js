@@ -14,7 +14,7 @@ export class PlayerController {
         this.playerHeight = options.playerHeight ?? 1.8;
         this.playerRadius = options.playerRadius ?? 0.29;
         this.playerHalfHeight = this.playerHeight / 2;
-        this.groundY = options.groundY ?? 0;
+        this.groundY = options.groundY ?? 20;
 
         this.fallbackGroundY = options.groundY ?? 0;
 
