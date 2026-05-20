@@ -114,77 +114,105 @@ export function createSunLight(scene, options = {}) {
     };
 }
 
+
+
+/**
+ * Converts a time-of-day (0–24, supports fractional minutes) into
+ * a world-space position on a circular orbit around the scene origin.
+ *
+ *  Sun  rises at 06:00, peaks at 12:00, sets at 20:00  → 14-hour arc
+ *  Moon rises at 20:00, peaks at 02:00, sets at 06:00  → 10-hour arc
+ *
+ * @param {number} hour        - e.g. new Date().getHours() + new Date().getMinutes()/60
+ * @param {number} riseHour    - hour the body crosses the horizon going up
+ * @param {number} setHour     - hour the body crosses the horizon going down
+ * @param {number} radius      - orbit radius (distance from origin)
+ * @param {number} tiltZ       - sideways tilt of the orbit plane (scene units)
+ * @returns {BABYLON.Vector3}
+ */
+function orbitalPosition(hour, riseHour, setHour, radius = 120, tiltZ = 0) {
+    // Normalise hour into [0, 1] across the arc.
+    // Works even when the arc crosses midnight (e.g. 20→06).
+    let arcLength = setHour - riseHour;
+    if (arcLength <= 0) arcLength += 24;          // crosses midnight
+
+    let elapsed = hour - riseHour;
+    if (elapsed < 0) elapsed += 24;
+
+    const t = Math.min(elapsed / arcLength, 1);   // 0 = rise, 0.5 = peak, 1 = set
+
+    // Semi-circle: angle goes from 0° (horizon east) → 180° (horizon west)
+    const angle = t * Math.PI;
+
+    const x = Math.cos(angle) * radius;           // east → west
+    const y = Math.sin(angle) * radius;           // up arc
+    const z = tiltZ;                              // slight depth offset
+
+    return new BABYLON.Vector3(x, y, z);
+}
+
+
 function getSunDataByHour(hour) {
 
-    // night: 20:00 - 06:00
+    // ── night: 20:00 – 06:00  (moon is up) ──────────────────────────────────
     if (hour >= 20 || hour < 6) {
         return {
-            position: new BABYLON.Vector3(-40, 20, -80),
-            sunIntensity: 0.08,
-            ambientIntensity: 0.18,
-            sunColor: new BABYLON.Color3(0.25, 0.35, 0.65),
-            ambientColor: new BABYLON.Color3(0.18, 0.22, 0.35),
-            groundColor: new BABYLON.Color3(0.05, 0.06, 0.10),
-            clearColor: new BABYLON.Color4(0.03, 0.04, 0.09, 1),
-            fogColor: new BABYLON.Color3(0.03, 0.04, 0.09),
-            fogStart: 35,
-            fogEnd: 95,
-            showSun: false
+            position: orbitalPosition(hour, 20, 6, 110, -30),
+            sunIntensity: 0.18,
+            ambientIntensity: 0.42,
+            sunColor:     new BABYLON.Color3(0.55, 0.65, 0.90),
+            ambientColor: new BABYLON.Color3(0.32, 0.38, 0.55),
+            groundColor:  new BABYLON.Color3(0.12, 0.14, 0.22),
+            clearColor:   new BABYLON.Color4(0.06, 0.08, 0.18, 1),
+            fogColor:     new BABYLON.Color3(0.06, 0.08, 0.18),
+            fogStart: 40, fogEnd: 110,
+            showSun: false   // swap in your moon mesh here
         };
     }
 
-    // morning: 06:00 - 08:00
-    if (hour >= 6 && hour < 8) {
+    // ── morning: 06:00 – 08:00 ───────────────────────────────────────────────
+    if (hour < 8) {
         return {
-            position: new BABYLON.Vector3(-90, 35, 40),
+            position: orbitalPosition(hour, 6, 20, 120, 40),
             sunIntensity: 0.55,
             ambientIntensity: 0.45,
-            sunColor: new BABYLON.Color3(1.0, 0.65, 0.35),
+            sunColor:     new BABYLON.Color3(1.0, 0.65, 0.35),
             ambientColor: new BABYLON.Color3(0.55, 0.60, 0.75),
-            groundColor: new BABYLON.Color3(0.20, 0.20, 0.22),
-            clearColor: new BABYLON.Color4(0.50, 0.62, 0.78, 1),
-            fogColor: new BABYLON.Color3(0.50, 0.62, 0.78),
-            fogStart: 50,
-            fogEnd: 130,
+            groundColor:  new BABYLON.Color3(0.20, 0.20, 0.22),
+            clearColor:   new BABYLON.Color4(0.50, 0.62, 0.78, 1),
+            fogColor:     new BABYLON.Color3(0.50, 0.62, 0.78),
+            fogStart: 50, fogEnd: 130,
             showSun: true
         };
     }
 
-    // day: 08:00 - 18:00
-    if (hour >= 8 && hour < 18) {
-        const dayProgress = (hour - 8) / 10;
-
-        const x = BABYLON.Scalar.Lerp(-100, 100, dayProgress);
-        const y = Math.sin(dayProgress * Math.PI) * 120 + 40;
-        const z = BABYLON.Scalar.Lerp(60, -60, dayProgress);
-
+    // ── day: 08:00 – 18:00 ───────────────────────────────────────────────────
+    if (hour < 18) {
         return {
-            position: new BABYLON.Vector3(x, y, z),
+            position: orbitalPosition(hour, 6, 20, 120, 0),
             sunIntensity: 1.15,
             ambientIntensity: 0.65,
-            sunColor: new BABYLON.Color3(1.0, 0.95, 0.82),
+            sunColor:     new BABYLON.Color3(1.0, 0.95, 0.82),
             ambientColor: new BABYLON.Color3(0.70, 0.75, 0.85),
-            groundColor: new BABYLON.Color3(0.28, 0.30, 0.32),
-            clearColor: new BABYLON.Color4(0.60, 0.75, 0.95, 1),
-            fogColor: new BABYLON.Color3(0.60, 0.75, 0.95),
-            fogStart: 70,
-            fogEnd: 160,
+            groundColor:  new BABYLON.Color3(0.28, 0.30, 0.32),
+            clearColor:   new BABYLON.Color4(0.60, 0.75, 0.95, 1),
+            fogColor:     new BABYLON.Color3(0.60, 0.75, 0.95),
+            fogStart: 70, fogEnd: 160,
             showSun: true
         };
     }
 
-    // evening: 18:00 - 20:00
+    // ── evening: 18:00 – 20:00 ───────────────────────────────────────────────
     return {
-        position: new BABYLON.Vector3(90, 30, -40),
+        position: orbitalPosition(hour, 6, 20, 120, -20),
         sunIntensity: 0.35,
         ambientIntensity: 0.35,
-        sunColor: new BABYLON.Color3(1.0, 0.42, 0.22),
+        sunColor:     new BABYLON.Color3(1.0, 0.42, 0.22),
         ambientColor: new BABYLON.Color3(0.35, 0.32, 0.45),
-        groundColor: new BABYLON.Color3(0.12, 0.10, 0.15),
-        clearColor: new BABYLON.Color4(0.22, 0.20, 0.32, 1),
-        fogColor: new BABYLON.Color3(0.22, 0.20, 0.32),
-        fogStart: 45,
-        fogEnd: 110,
+        groundColor:  new BABYLON.Color3(0.12, 0.10, 0.15),
+        clearColor:   new BABYLON.Color4(0.22, 0.20, 0.32, 1),
+        fogColor:     new BABYLON.Color3(0.22, 0.20, 0.32),
+        fogStart: 45, fogEnd: 110,
         showSun: true
     };
 }
