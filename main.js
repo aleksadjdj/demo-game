@@ -33,7 +33,7 @@ const createScene = async () => {
         console.log("03 preload complete", assets);
 
         console.log("04 light start");
-        const { sunLight, shadowGenerator } = createSunLight(scene, {forceHour: 17});
+        const { sunLight, shadowGenerator } = createSunLight(scene, {forceHour: 10});
         console.log("05 light complete");
 
         console.log("06 terrain start");

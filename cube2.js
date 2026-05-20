@@ -104,6 +104,7 @@ export function createCube(scene) {
 
         cube.metadata = cube.metadata || {};
         cube.metadata.rotationSpeed = getRandomRotationSpeed();
+   
 
         const randomTextureMat = getRandomTextureMaterial();
 
