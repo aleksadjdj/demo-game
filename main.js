@@ -11,6 +11,8 @@ import { PlayerController } from "./player.js";
 import { createSunLight, addSceneShadowCasters } from "./sunLight.js";
 import { KeyHoldTimerDebug } from "./ui/keyHoldTimerDebug.js";
 import { createGiantSkyCube } from "./cube3.js";
+import { loadBear } from './bear.js';
+
 
 const canvas = document.getElementById("renderCanvas");
 
@@ -60,8 +62,12 @@ const createScene = async () => {
         // IMPORTANT: add the player mesh itself
         shadowGenerator.addShadowCaster(playerController.mesh, true);
         playerController.mesh.receiveShadows = true;
+        
+        console.log("12 load bear");
+       const bearData = await loadBear(scene, playerController.mesh);
 
         console.log("12 player complete");
+
 
         console.log("13 cubes start");
         createCubeLine(scene);

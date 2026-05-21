@@ -9,6 +9,7 @@ export const ASSET_MANIFEST = {
   
         "./assets/nature_models/Bark_NormalTree.png",
         "./assets/nature_models/Leaves_NormalTree_C.png",
+        "./assets/bear/gltf_embedded_0.jpeg",
     ],
 
     models: [
@@ -56,6 +57,11 @@ export const ASSET_MANIFEST = {
             name: "CommonTree_5",
             rootUrl: "./assets/nature_models/",
             fileName: "CommonTree_5.gltf",
-        }
+        },
+        {
+            name: "Bear_1",
+            rootUrl: "./assets/bear/",
+            fileName: "bear.glb",
+        },
     ]
 };
